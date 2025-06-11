@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reserva de Vehículos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { poppins: ['Poppins', 'sans-serif'] },
+          colors: {
+            primaryBg: '#f0f4fd',
+            secondaryBg: '#ffeef1',
+            panelBg: 'rgba(255, 255, 255, 0.95)',
+            primary: '#6c5ce7',
+            secondary: '#74b9ff',
+            accent: '#6c5ce7',
+            text: '#2d3436',
+            border: '#dfe6e9'
+          },
+          boxShadow: {
+            card: '0 12px 40px rgba(108, 92, 231, 0.2)',
+            button: '0 5px 10px rgba(108, 92, 231, 0.3)'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-primaryBg text-text font-poppins min-h-screen">
+  <header class="border-b border-accent py-5 shadow-card">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-3xl font-bold text-primary">🚘 Reserva de Vehículos</h1>
+      <a href="index.html" class="text-white bg-primary px-4 py-2 rounded-lg hover:bg-secondary transition">Cerrar sesión</a>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Formulario de Reserva -->
+    <div class="backdrop-blur-sm bg-panelBg border border-border rounded-lg p-6 shadow-card">
+      <h2 class="text-2xl font-bold mb-4 text-primary">📅 Nueva Reserva</h2>
+      <form id="reserva-form" class="space-y-4">
+        <div>
+          <label class="block mb-1 text-gray-700">Filtrar por marca</label>
+          <select id="filtro-marca" class="w-full px-4 py-2 bg-gray-50 text-gray-700 border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20" onchange="filtrarVehiculos()">
+            <option value="todas">Todas las marcas</option>
+            <!-- Marcas se cargarán automáticamente -->
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1 text-gray-700">Vehículos Disponibles</label>
+          <div id="vehiculos-disponibles" class="max-h-96 overflow-y-auto space-y-3 border border-border p-3 rounded-lg bg-gray-50">
+            <p class="text-center py-10 text-gray-500">Cargando vehículos disponibles...</p>
+          </div>
+        </div>
+        <input type="hidden" id="vehiculo-seleccionado">
+        <div>
+          <label class="block mb-1 text-gray-700">Fecha Inicio</label>
+          <input type="date" id="reserva-inicio" class="w-full px-4 py-2 bg-gray-50 text-gray-700 border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20" required>
+        </div>
+        <div>
+          <label class="block mb-1 text-gray-700">Fecha Fin</label>
+          <input type="date" id="reserva-fin" class="w-full px-4 py-2 bg-gray-50 text-gray-700 border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20" required>
+        </div>
+        <button type="submit" class="w-full px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-lg hover:opacity-90 transition shadow-button hover:shadow-md">
+          Reservar Vehículo
+        </button>
+      </form>
+    </div>
+
+    <!-- Mis Reservas -->
+    <div class="backdrop-blur-sm bg-panelBg border border-border rounded-lg p-6 shadow-card lg:col-span-2">
+      <h2 class="text-2xl font-bold mb-4 text-primary">📋 Mis Reservas</h2>
+      <div id="reservas-list" class="space-y-4">
+        <p class="text-center py-10 text-gray-500">Cargando tus reservas...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Calendario de Disponibilidad -->
+  <section class="container mx-auto px-4 pb-10">
+    <div class="backdrop-blur-sm bg-panelBg border border-border rounded-lg p-6 shadow-card mt-6">
+      <h2 class="text-2xl font-bold mb-4 text-primary">📆 Calendario de Disponibilidad</h2>
+      <div id="calendar" class="bg-gray-50 p-4 rounded-lg"></div>
+    </div>
+  </section>
+
+  <script>
+    // Variables globales
+    let usuarioId = 1; // Esto debería obtenerse de la sesión del usuario
+
+    // Función mejorada para mostrar vehículos disponibles
+    async function mostrarVehiculosDisponibles() {
+      const contenedor = document.getElementById('vehiculos-disponibles');
+      contenedor.innerHTML = '<p class="text-center py-10 text-gray-500">Cargando vehículos...</p>';
+      
+      try {
+        const res = await fetch("./php/api_vehiculos.php");
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Error en la respuesta del servidor");
+        }
+        
+        const vehiculos = await res.json();
+        const disponibles = vehiculos.filter(v => v.estado === 'disponible');
+        
+        if (disponibles.length === 0) {
+          contenedor.innerHTML = `
+            <div class="border border-yellow-400 p-4 rounded-lg text-center bg-yellow-50">
+              <p class="text-yellow-700">No hay vehículos disponibles actualmente</p>
+              <p class="text-sm text-yellow-600">Intenta nuevamente más tarde</p>
+            </div>
+          `;
+          return;
+        }
+        
+        contenedor.innerHTML = disponibles.map(vehiculo => `
+          <div class="border border-border p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition vehiculo-item" 
+               data-id="${vehiculo.id}" 
+               data-marca="${vehiculo.marca}"
+               onclick="seleccionarVehiculo(${vehiculo.id}, '${vehiculo.marca}', '${vehiculo.modelo}')">
+            <h3 class="font-bold text-primary">${vehiculo.marca} ${vehiculo.modelo}</h3>
+            <p class="text-gray-600">Año: ${vehiculo.año} • Placa: ${vehiculo.placa}</p>
+            <p class="text-green-600 font-medium">Disponible</p>
+          </div>
+        `).join('');
+        
+        cargarMarcasFiltro(disponibles);
+      } catch (error) {
+        console.error("Error detallado:", error);
+        contenedor.innerHTML = `
+          <div class="border border-red-400 p-4 rounded-lg bg-red-50">
+            <p class="text-red-700 font-bold">Error al cargar vehículos</p>
+            <p class="text-red-600">${error.message}</p>
+            <button onclick="mostrarVehiculosDisponibles()" 
+                    class="mt-2 px-3 py-1 bg-primary text-white rounded-lg hover:bg-secondary transition">
+              Reintentar
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Función para cargar las marcas en el filtro
+    function cargarMarcasFiltro(vehiculos) {
+      const selectFiltro = document.getElementById('filtro-marca');
+      const marcas = [...new Set(vehiculos.map(v => v.marca))].sort();
+      
+      selectFiltro.innerHTML = `
+        <option value="todas">Todas las marcas</option>
+        ${marcas.map(marca => `<option value="${marca}">${marca}</option>`).join('')}
+      `;
+    }
+
+    // Función mejorada para filtrar vehículos por marca
+    function filtrarVehiculos() {
+      const marcaSeleccionada = document.getElementById('filtro-marca').value;
+      const items = document.querySelectorAll('.vehiculo-item');
+      
+      items.forEach(item => {
+        const marcaVehiculo = item.dataset.marca;
+        if (marcaSeleccionada === 'todas' || marcaVehiculo === marcaSeleccionada) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    // Función para seleccionar un vehículo
+    window.seleccionarVehiculo = function(id, marca, modelo) {
+      document.querySelectorAll('.vehiculo-item').forEach(item => {
+        item.classList.remove('bg-primary/10', 'border-2', 'border-primary');
+      });
+      
+      const item = document.querySelector(`.vehiculo-item[data-id="${id}"]`);
+      item.classList.add('bg-primary/10', 'border-2', 'border-primary');
+      
+      document.getElementById('vehiculo-seleccionado').value = id;
+    }
+
+    // Función para cargar las reservas del usuario
+    async function cargarReservas() {
+      const contenedor = document.getElementById('reservas-list');
+      contenedor.innerHTML = '<p class="text-center py-10 text-gray-500">Cargando tus reservas...</p>';
+      
+      try {
+        const res = await fetch(`./php/api_reservas.php?usuario_id=${usuarioId}`);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Error al cargar reservas");
+        }
+        
+        const reservas = await res.json();
+        
+        if (reservas.length === 0) {
+          contenedor.innerHTML = `
+            <div class="border border-border p-4 rounded-lg text-center bg-gray-50">
+              <p class="text-gray-700">No tienes reservas actualmente</p>
+              <p class="text-sm text-gray-600">Realiza tu primera reserva</p>
+            </div>
+          `;
+          return;
+        }
+        
+        contenedor.innerHTML = reservas.map(reserva => `
+          <div class="border border-border p-4 rounded-lg bg-gray-50">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-primary">${reserva.marca} ${reserva.modelo}</h3>
+                <p class="text-gray-600">Placa: ${reserva.placa}</p>
+                <p class="text-gray-600">Fecha: ${formatearFecha(reserva.fecha_inicio)} a ${formatearFecha(reserva.fecha_fin)}</p>
+              </div>
+              <button onclick="cancelarReserva(${reserva.id})" 
+                      class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error("Error al cargar reservas:", error);
+        contenedor.innerHTML = `
+          <div class="border border-red-400 p-4 rounded-lg bg-red-50">
+            <p class="text-red-700 font-bold">Error al cargar reservas</p>
+            <p class="text-red-600">${error.message}</p>
+            <button onclick="cargarReservas()" 
+                    class="mt-2 px-3 py-1 bg-primary text-white rounded-lg hover:bg-secondary transition">
+              Reintentar
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Función para cancelar una reserva
+    window.cancelarReserva = async function(reservaId) {
+      if (!confirm("¿Estás seguro de que deseas cancelar esta reserva?")) return;
+      
+      try {
+        const response = await fetch("./php/api_reservas.php", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `id=${reservaId}`
+        });
+        
+        const result = await response.json();
+        if (!result.success) {
+          alert(result.error || "Error al cancelar la reserva");
+          return;
+        }
+        
+        alert("Reserva cancelada correctamente");
+        await cargarReservas();
+        await mostrarVehiculosDisponibles();
+      } catch (error) {
+        alert("Error al conectar con el servidor");
+        console.error(error);
+      }
+    }
+
+    // Función para formatear fechas
+    function formatearFecha(fechaString) {
+      const opciones = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(fechaString).toLocaleDateString('es-ES', opciones);
+    }
+
+    // Función para manejar el envío del formulario
+    async function manejarReserva(e) {
+      e.preventDefault();
+      
+      const vehiculoId = document.getElementById('vehiculo-seleccionado').value;
+      if (!vehiculoId) {
+        alert("Por favor selecciona un vehículo");
+        return;
+      }
+      
+      const fechaInicio = document.getElementById('reserva-inicio').value;
+      const fechaFin = document.getElementById('reserva-fin').value;
+      
+      if (!fechaInicio || !fechaFin) {
+        alert("Por favor completa ambas fechas");
+        return;
+      }
+      
+      if (new Date(fechaFin) < new Date(fechaInicio)) {
+        alert("La fecha de fin debe ser posterior a la fecha de inicio");
+        return;
+      }
+
+      const reserva = {
+        usuario_id: usuarioId,
+        vehiculo_id: vehiculoId,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin
+      };
+
+      try {
+        const response = await fetch("./php/api_reservas.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reserva)
+        });
+        
+        const result = await response.json();
+        if (!result.success) {
+          alert(result.message || "Error al realizar la reserva");
+          return;
+        }
+        
+        alert("Reserva realizada con éxito");
+        document.getElementById('reserva-form').reset();
+        document.querySelectorAll('.vehiculo-item').forEach(item => {
+          item.classList.remove('bg-primary/10', 'border-2', 'border-primary');
+        });
+        document.getElementById('vehiculo-seleccionado').value = '';
+        
+        await mostrarVehiculosDisponibles();
+        await cargarReservas();
+      } catch (error) {
+        alert("Error al conectar con el servidor");
+        console.error(error);
+      }
+    }
+
+    // Inicialización del calendario
+    function inicializarCalendario() {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: './php/api_reservas.php',
+        eventColor: '#6c5ce7',
+        eventTextColor: '#ffffff'
+      });
+      calendar.render();
+    }
+
+    // Asignar el manejador de eventos al formulario
+    document.getElementById('reserva-form').addEventListener('submit', manejarReserva);
+
+    // Configurar fechas mínimas y cargar datos iniciales
+    document.addEventListener('DOMContentLoaded', () => {
+      const hoy = new Date().toISOString().split('T')[0];
+      document.getElementById('reserva-inicio').min = hoy;
+      document.getElementById('reserva-fin').min = hoy;
+      
+      // Configurar evento para actualizar fecha mínima de fin
+      document.getElementById('reserva-inicio').addEventListener('change', function() {
+        document.getElementById('reserva-fin').min = this.value;
+      });
+      
+      mostrarVehiculosDisponibles();
+      cargarReservas();
+      inicializarCalendario();
+      
+      // Actualizar cada 30 segundos (opcional)
+      setInterval(mostrarVehiculosDisponibles, 30000);
+    });
+  </script>
+</body>
+</html>

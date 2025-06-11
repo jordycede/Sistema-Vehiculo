@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login / Registro</title>
+
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Animaciones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+  <!-- Estilo personalizado -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Nuevo fondo animado -->
+<div class="background-animation"></div>
+
+<div class="container animate__animated animate__fadeIn">
+  <div class="card" id="card">
+    
+    <!-- Login -->
+    <div class="side front">
+      <form action="./php/login.php" method="POST">
+        <h2>Iniciar Sesión</h2>
+        <div class="input-group">
+          <i class="fas fa-user"></i>
+          <input type="text" name="nombre_usuario" placeholder="Usuario" required>
+        </div>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" name="contraseña" placeholder="Contraseña" required>
+        </div>
+        <button type="submit">Ingresar</button>
+        <p class="switch">¿No tienes cuenta? <a id="toRegister">Registrarse</a></p>
+      </form>
+    </div>
+
+    <!-- Registro -->
+    <div class="side back">
+      <form action="./php/registro.php" method="POST">
+        <h2>Registrarse</h2>
+        <div class="input-group">
+          <i class="fas fa-user-plus"></i>
+          <input type="text" name="nombre_usuario" placeholder="Nuevo usuario" required>
+        </div>
+        <div class="input-group">
+          <i class="fas fa-key"></i>
+          <input type="password" name="contraseña" placeholder="Nueva contraseña" required>
+        </div>
+        <button type="submit">Registrar</button>
+        <p class="switch">¿Ya tienes cuenta? <a id="toLogin">Iniciar sesión</a></p>
+      </form>
+      <div id="mensajeRegistro"></div>
+    </div>
+  </div>
+
+</div>
+
+<div id="mensajeRegistro"></div>
+
+<!-- Script personalizado -->
+<script src="js/script.js"></script>
+
+<!-- Configuración del nuevo fondo animado -->
+<script>
+  // Nuevo efecto de fondo con formas geométricas animadas
+  document.addEventListener('DOMContentLoaded', function() {
+    const colors = ['#6c5ce7', '#74b9ff', '#a29bfe', '#ffeaa7', '#fd79a8'];
+    const background = document.querySelector('.background-animation');
+    
+    for (let i = 0; i < 15; i++) {
+      const shape = document.createElement('div');
+      shape.classList.add('animated-shape');
+      
+      // Posición aleatoria
+      const posX = Math.random() * 100;
+      const posY = Math.random() * 100;
+      
+      // Tamaño aleatorio
+      const size = Math.random() * 200 + 100;
+      
+      // Color aleatorio
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      
+      // Opacidad aleatoria
+      const opacity = Math.random() * 0.2 + 0.1;
+      
+      // Tipo de forma aleatorio
+      const shapeType = Math.random() > 0.5 ? 'circle' : 'square';
+      
+      shape.style.position = 'absolute';
+      shape.style.left = `${posX}%`;
+      shape.style.top = `${posY}%`;
+      shape.style.width = `${size}px`;
+      shape.style.height = `${size}px`;
+      shape.style.backgroundColor = color;
+      shape.style.opacity = opacity;
+      shape.style.borderRadius = shapeType === 'circle' ? '50%' : '0';
+      shape.style.filter = 'blur(30px)';
+      shape.style.zIndex = '-1';
+      shape.style.transform = 'translate(-50%, -50%)';
+      
+      // Animación
+      const duration = Math.random() * 30 + 20;
+      const delay = Math.random() * 5;
+      
+      shape.style.animation = `float ${duration}s ease-in-out ${delay}s infinite alternate`;
+      
+      background.appendChild(shape);
+    }
+  });
+</script>
+
+</body>
+</html>

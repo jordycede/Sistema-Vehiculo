@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Gestión de Vehículos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { poppins: ['Poppins', 'sans-serif'] },
+          colors: {
+            primaryBg: '#f0f4fd',
+            secondaryBg: '#ffeef1',
+            panelBg: 'rgba(255, 255, 255, 0.95)',
+            primary: '#6c5ce7',
+            secondary: '#74b9ff',
+            accent: '#6c5ce7',
+            text: '#2d3436',
+            border: '#dfe6e9'
+          },
+          boxShadow: {
+            card: '0 12px 40px rgba(108, 92, 231, 0.2)',
+            button: '0 5px 10px rgba(108, 92, 231, 0.3)'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-primaryBg text-text font-poppins min-h-screen">
+  <header class="border-b border-accent py-5 shadow-card">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-3xl font-bold text-primary">🚗 Gestión de Vehículos</h1>
+      <a href="index.html" class="text-white bg-primary px-4 py-2 rounded-lg hover:bg-secondary transition">Cerrar sesión</a>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-6">
+    <!-- Formulario Vehículo -->
+    <div class="backdrop-blur-sm bg-panelBg border border-border rounded-lg p-6 mb-8 shadow-card">
+      <h2 class="text-2xl font-bold mb-4 text-primary">➕ Nuevo Vehículo</h2>
+      <form id="vehiculo-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="hidden" id="vehiculo-id">
+        <div>
+          <label class="block mb-1 text-gray-700">Marca</label>
+          <input type="text" id="vehiculo-marca" class="w-full px-4 py-2 bg-gray-50 text-gray-700 border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20" required>
+        </div>
+        <div>
+          <label class="block mb-1 text-gray-700">Modelo</label>
+          <input type="text" id="vehiculo-modelo" class="w-full px-4 py-2 bg-gray-50 text-gray-700 border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20" required>
+        </div>
+        <div>
+          <label class="block mb-1 text-gray-700">Año</label>
+          <input type="number" id="vehiculo-año" class="w-full px-4 py-2 bg-gray-50 text-gray-700 border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20" required>
+        </div>
+        <div>
+          <label class="block mb-1 text-gray-700">Placa</label>
+          <input type="text" id="vehiculo-placa" class="w-full px-4 py-2 bg-gray-50 text-gray-700 border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20" required>
+        </div>
+        <div class="md:col-span-2">
+          <button type="submit" class="w-full px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-lg hover:opacity-90 transition shadow-button hover:shadow-md">
+            Guardar Vehículo
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Lista de Vehículos -->
+    <div class="backdrop-blur-sm bg-panelBg border border-border rounded-lg p-6 shadow-card">
+      <h2 class="text-2xl font-bold mb-4 text-primary">🚘 Vehículos Registrados</h2>
+      <div id="vehiculos-list" class="space-y-4"></div>
+    </div>
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
